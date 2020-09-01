@@ -1,0 +1,446 @@
+#include "FastLED.h"
+#define LED_TYPE    WS2811  //WS2811, WS2812, WS2812B
+#define COLOR_ORDER RGB
+#define DATA_PIN 3
+#define NUM_LEDS 25
+#define BRIGHTNESS 255 //Brillo
+CRGB leds[NUM_LEDS];
+#define UPDATES_PER_SECOND 100
+#include <Adafruit_NeoPixel.h>
+#define PIN 3 // PIN de datos para la tira
+#define NUMPIXELS 40 // Cantidad de pixels encendidos
+Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); //Incluimos parametros del Pin de datos y cantidad de leds.
+//Sonido#include <avr/power.h>
+
+
+CRGBPalette16 currentPalette;
+TBlendType    currentBlending;
+
+extern CRGBPalette16 myRedWhiteBluePalette;
+extern const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM;
+
+void efecto_2();
+void ChangePalettePeriodically();
+void FillLEDsFromPaletteColors( uint8_t colorIndex);
+
+uint32_t rojo = pixels.Color(255, 0, 0);
+uint32_t rojoc = pixels.Color (150, 0, 0);
+uint32_t rojoc1 = pixels.Color (255, 0, 0);
+uint32_t verde = pixels.Color(0, 150, 0);
+uint32_t azul = pixels.Color(0, 0, 150);
+uint32_t rosado = pixels.Color(255, 20 , 147 );
+uint32_t naranja  = pixels.Color(255, 165, 0);
+uint32_t naranja_claro = pixels.Color(127, 70, 0);
+uint32_t celeste_claro = pixels.Color(32, 178, 170);
+uint32_t aqua = pixels.Color(0, 127, 127);
+uint32_t sandybrown = pixels.Color(122, 164 , 96);
+uint32_t apagado = pixels.Color (0, 0, 0);
+int delayval = 1000 ; // Pausa de   cincuenta milisegundos
+/-----------------------------------------------------------------/
+#include "Arduino.h"
+#include "SoftwareSerial.h"
+#include "DFRobotDFPlayerMini.h"
+SoftwareSerial mySoftwareSerial(10, 11); // RX, TX
+DFRobotDFPlayerMini myDFPlayer;
+/=================================================================/
+long randomNumber; 
+void setup() {
+  delay(2000);  // Startup delay
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS);
+  FastLED.setBrightness(BRIGHTNESS);
+  FastLED.clear();
+  FastLED.show();
+  FastLED.addLeds<LED_TYPE, DATA_PIN, COLOR_ORDER>(leds, NUM_LEDS).setCorrection( TypicalLEDStrip );
+  FastLED.setBrightness(  BRIGHTNESS );
+
+  currentPalette = RainbowColors_p;
+  currentBlending = LINEARBLEND;
+
+  mySoftwareSerial.begin(9600); //MP3
+  Serial.begin(115200);
+
+  if (!myDFPlayer.begin(mySoftwareSerial))
+  {
+    Serial.println("ERROR");
+    while (true);
+  }
+  Serial.println("MODULO FUNCIONANDO");
+
+  myDFPlayer.volume(10); //Control de volumen del reproductor.
+}
+
+
+//---------------------------------------------------------------
+void loop() {
+  
+  efecto_2();
+  musica_on();
+  
+ 
+}
+
+
+void musica_on () {
+  boolean busy = digitalRead(8);
+  if (busy == true) {
+    myDFPlayer.next();
+  }
+  delay(50);
+}
+void efecto_1 () {  //Suspiracion roja
+  static float pulseSpeed = 0.5;  // Velocidad del pulso, un valor mayor lo hace mas rapido.
+
+  uint8_t hueA = 95;  // Color 1
+  uint8_t satA = 230;  // Start saturation at valueMin.
+  float valueMin = 120.0;  // Pulse minimum value (Should be less then valueMax).
+
+  uint8_t hueB = 95;  //Color 2
+  uint8_t satB = 255;  // End saturation at valueMax.
+  float valueMax = 255.0;  // Pulse maximum value (Should be larger then valueMin).
+
+  uint8_t hue = hueA;  // Fijo
+  uint8_t sat = satA;  // Fijo
+  float val = valueMin;  // Fijo
+  uint8_t hueDelta = hueA - hueB;  // Fijo
+  static float delta = (valueMax - valueMin) / 2.35040238;  // Fijo
+  float dV = ((exp(sin(pulseSpeed * millis() / 2000.0 * PI)) - 0.36787944) * delta);
+  val = valueMin + dV;
+  hue = map(val, valueMin, valueMax, hueA, hueB);  // Map hue based on current val
+  sat = map(val, valueMin, valueMax, satA, satB);  // Map sat based on current val
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV(hue, sat, val);
+
+
+    leds[i].r = dim8_video(leds[i].r);
+    leds[i].g = dim8_video(leds[i].g);
+    leds[i].b = dim8_video(leds[i].b);
+  }
+
+  FastLED.show();
+}
+
+void efecto_2 () {  //Variación de colores
+
+  static float pulseSpeed = 0.5;  // Velocidad del pulso, un valor mayor lo hace mas rapido.
+
+  uint8_t hueA = 15;  // Color 1
+  uint8_t satA = 230;  // Start saturation at valueMin.
+  float valueMin = 120.0;  // Pulse minimum value (Should be less then valueMax).
+
+  uint8_t hueB = 95;  //Color 2
+  uint8_t satB = 255;  // End saturation at valueMax.
+  float valueMax = 255.0;  // Pulse maximum value (Should be larger then valueMin).
+
+  uint8_t hue = hueA;  // Fijo
+  uint8_t sat = satA;  // Fijo
+  float val = valueMin;  // Fijo
+  uint8_t hueDelta = hueA - hueB;  // Fijo
+  static float delta = (valueMax - valueMin) / 2.35040238;  // Fijo
+  float dV = ((exp(sin(pulseSpeed * millis() / 2000.0 * PI)) - 0.36787944) * delta);
+  val = valueMin + dV;
+  hue = map(val, valueMin, valueMax, hueA, hueB);  // Map hue based on current val
+  sat = map(val, valueMin, valueMax, satA, satB);  // Map sat based on current val
+
+  for (int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = CHSV(hue, sat, val);
+
+
+    leds[i].r = dim8_video(leds[i].r);
+    leds[i].g = dim8_video(leds[i].g);
+    leds[i].b = dim8_video(leds[i].b);
+  }
+
+  FastLED.show();
+}
+
+void efecto_3 () {  //Rainbox
+  ChangePalettePeriodically();
+
+  static uint8_t startIndex = 0;
+  startIndex = startIndex + 1; /* motion speed */
+
+  FillLEDsFromPaletteColors( startIndex);
+
+  FastLED.show();
+  FastLED.delay(1000 / UPDATES_PER_SECOND);
+
+}
+
+void efecto_4 () {                    // Funcion del efecto Prender y apagar led 1x1
+  for (int i = 0; i < NUMPIXELS; i++) {  //Prende todos los pixeles de una vez
+    pixels.setPixelColor(i, naranja);
+  }
+  pixels.show();
+  delay(delayval);
+
+  for (int i = 0; i < NUMPIXELS; i++) {  // Prende pixel x pixel
+    pixels.setPixelColor(i, rojo);
+    pixels.show(); //
+    delay(80);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(50);
+  }
+
+  for (int i = 30 ; i > 0 ; i--) {
+    pixels.setPixelColor(i, verde);
+    pixels.show();
+    delay(50);
+
+  }
+
+
+}
+
+void efecto_5 () {                  //Función 3 colores de leds prendido intermitente
+  for (int i = 0; i < NUMPIXELS; i++) { // Prende a todos de una
+    pixels.setPixelColor(i, apagado);
+  }
+  pixels.show();
+
+  for (int i = 0; i < NUMPIXELS ; i++) {
+    pixels.setPixelColor(i, naranja);
+    pixels.show();
+    delay(100);
+
+    pixels.setPixelColor(i, naranja);
+    pixels.show();
+    delay(50);
+
+    pixels.setPixelColor(i, naranja);
+    pixels.show();
+    delay(25);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(300);
+
+  }
+}
+
+void efecto_6 () {                  //Efecto recorrido positivo-negativo
+  for (int i = 0; i < NUMPIXELS; i++) { // Efecto recorrido completo de forma positiva
+    pixels.setPixelColor(i, apagado);
+  }
+  pixels.show();
+
+  for (int i = 0; i < NUMPIXELS ; i++) {
+    pixels.setPixelColor(i + 2, naranja);
+    pixels.show();
+    delay(30);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(30);
+
+  }
+  for (int i = 0 ; i < NUMPIXELS; i++) { // Efecto recorrido completo de forma negativa
+    pixels.setPixelColor(i, apagado);
+  }
+  pixels.show();
+
+  for (int i = 30; i > 0 ; i--) {
+    pixels.setPixelColor(i - 2, naranja);
+    pixels.show();
+    delay(30);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(30);
+  }
+}
+
+void efecto_7 () {                 // Efecto luces pares e impares
+  pixels.setPixelColor(1, azul);      //PRENDIENDO LUCES PARES
+  pixels.setPixelColor(3, rojo);
+  pixels.setPixelColor(5, naranja);
+  pixels.setPixelColor(7, verde);
+  pixels.setPixelColor(9, azul);
+  pixels.setPixelColor(11, naranja);
+  pixels.setPixelColor(13, verde);
+  pixels.setPixelColor(15, naranja);
+  pixels.setPixelColor(17, naranja);
+  pixels.setPixelColor(19, naranja);
+  pixels.setPixelColor(21, naranja);
+  pixels.setPixelColor(23, naranja);
+  pixels.setPixelColor(25, naranja);
+  pixels.setPixelColor(27, naranja);
+  pixels.setPixelColor(29, naranja);
+  pixels.setPixelColor(31, naranja);
+  pixels.show();
+  delay(5000);
+
+  for (int i = 0; i < NUMPIXELS; i++) {
+    pixels.setPixelColor(i, apagado);
+  }
+
+  pixels.show();
+  delay(2000);
+
+  pixels.setPixelColor(0, azul);      //PRENDIENDO LUCES IMPARES
+  pixels.setPixelColor(2, rojo);
+  pixels.setPixelColor(4, naranja);
+  pixels.setPixelColor(6, verde);
+  pixels.setPixelColor(8, azul);
+  pixels.setPixelColor(10, naranja);
+  pixels.setPixelColor(12, verde);
+  pixels.setPixelColor(14, naranja);
+  pixels.setPixelColor(16, naranja);
+  pixels.setPixelColor(18, naranja);
+  pixels.setPixelColor(20, naranja);
+  pixels.setPixelColor(22, naranja);
+  pixels.setPixelColor(24, naranja);
+  pixels.setPixelColor(26, naranja);
+  pixels.setPixelColor(28, naranja);
+  pixels.setPixelColor(30, naranja);
+  pixels.show();
+  delay(5000);
+
+  for (int i = 0; i < NUMPIXELS; i++) {
+    pixels.setPixelColor(i, apagado);
+  }
+  pixels.show();
+  delay(3000);
+
+
+
+
+
+}
+
+void efecto_8 () {                // Efecto de leds corridos
+  for (int i = 0; i < NUMPIXELS; i++) {  // Prende pixel x pixel
+    pixels.setPixelColor(i + 1, naranja);
+    pixels.show(); //
+    delay(50);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(25);
+  }
+
+  for (int i = 0; i < NUMPIXELS; i++) {  // Prende pixel x pixel
+    pixels.setPixelColor(i + 1, naranja);
+    pixels.show(); //
+    delay(50);
+
+    pixels.setPixelColor(i, apagado);
+    pixels.show();
+    delay(25);
+  }
+
+
+}
+
+void efecto_9 () { //Luces rojas estaticas
+
+  for (int i = 0 ; i < NUMPIXELS ; i++) {
+    pixels.setPixelColor(i, rojo);
+  }
+  pixels.show();
+  delay (5000);
+
+  for (int i = 0 ; i < NUMPIXELS ; i++) {
+    pixels.setPixelColor(i, rojoc1);
+  }
+  pixels.show();
+  delay (1000);
+
+
+
+}
+
+void apagar_luces () {
+  for (int i = 0 ; i < NUMPIXELS ; i++) {
+    pixels.setPixelColor(i, apagado);
+  }
+  pixels.show();
+  delay (50);
+}
+
+void FillLEDsFromPaletteColors( uint8_t colorIndex)
+{
+  uint8_t brightness = 255;
+
+  for ( int i = 0; i < NUM_LEDS; i++) {
+    leds[i] = ColorFromPalette( currentPalette, colorIndex, brightness, currentBlending);
+    colorIndex += 3;
+  }
+}
+
+
+void ChangePalettePeriodically()
+{
+  uint8_t secondHand = (millis() / 1000) % 60;
+  static uint8_t lastSecond = 99;
+
+  if ( lastSecond != secondHand) {
+    lastSecond = secondHand;
+    if ( secondHand ==  0)  {
+      currentPalette = RainbowColors_p;
+      currentBlending = LINEARBLEND;
+    }
+
+  }
+}
+
+
+void SetupTotallyRandomPalette()
+{
+  for ( int i = 0; i < 16; i++) {
+    currentPalette[i] = CHSV( random8(), 255, random8());
+  }
+}
+
+
+void SetupBlackAndWhiteStripedPalette()
+{
+
+  fill_solid( currentPalette, 16, CRGB::Black);
+  // and set every fourth one to white.
+  currentPalette[0] = CRGB::White;
+  currentPalette[4] = CRGB::White;
+  currentPalette[8] = CRGB::White;
+  currentPalette[12] = CRGB::White;
+
+}
+
+
+void SetupPurpleAndGreenPalette()
+{
+  CRGB purple = CHSV( HUE_PURPLE, 255, 255);
+  CRGB green  = CHSV( HUE_GREEN, 255, 255);
+  CRGB black  = CRGB::Black;
+
+  currentPalette = CRGBPalette16(
+                     green,  green,  black,  black,
+                     purple, purple, black,  black,
+                     green,  green,  black,  black,
+                     purple, purple, black,  black );
+}
+
+
+
+const TProgmemPalette16 myRedWhiteBluePalette_p PROGMEM =
+{
+  CRGB::Red,
+  CRGB::Gray, // 'white' is too bright compared to red and blue
+  CRGB::Blue,
+  CRGB::Black,
+
+  CRGB::Red,
+  CRGB::Gray,
+  CRGB::Blue,
+  CRGB::Black,
+
+  CRGB::Red,
+  CRGB::Red,
+  CRGB::Gray,
+  CRGB::Gray,
+  CRGB::Blue,
+  CRGB::Blue,
+  CRGB::Black,
+  CRGB::Black
+};
