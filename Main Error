@@ -6,10 +6,7 @@
 #define BRIGHTNESS 255 //Brillo
 CRGB leds[NUM_LEDS];
 #define UPDATES_PER_SECOND 100
-#include <Adafruit_NeoPixel.h>
-#define PIN 3 // PIN de datos para la tira
-#define NUMPIXELS 40 // Cantidad de pixels encendidos
-Adafruit_NeoPixel pixels = Adafruit_NeoPixel(NUMPIXELS, PIN, NEO_GRB + NEO_KHZ800); 
+
 
 void setup() {
 delay(2000);  // Startup delay
